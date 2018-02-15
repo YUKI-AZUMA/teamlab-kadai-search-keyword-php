@@ -10,18 +10,24 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous" />
     <style>
         body {
-            padding-top: 40px;
+            padding-top: 70px;
             padding-bottom: 40px;
-            background-color: #eee;
+            background-image: url(speed2.jpg);
+            background-position: center center;
+            background-attachment: fixed;
+            background-size: cover;
         }
         .form-keyword {
             max-width: 330px;
             padding: 15px;
-            margin: 0 auto;
-        }
+            margin-top: 15%;
+            margin-left: 37%;
+          }
         .form-keyword .form-keyword-heading,
         .form-keyword .checkbox {
             margin-bottom: 10px;
+            font-weight:bold;
+            color: #ffffff;
         }
         .form-keyword .checkbox {
             font-weight: normal;
