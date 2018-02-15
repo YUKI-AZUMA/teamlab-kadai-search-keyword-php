@@ -57,7 +57,7 @@
         <label for="keyword" class="sr-only">キーワード</label>
         <input type="text" name="keyword" id="keyword" class="form-control" placeholder="キーワード" autofocus="true" />
         <br />
-        <button class="btn btn-lg btn-primary btn-block" type="submit">検索</button>
+        <button class="btn btn-lg btn-block" type="submit">検索</button>
     </form>
 </div>
 </body>
