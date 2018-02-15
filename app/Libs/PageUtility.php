@@ -22,33 +22,34 @@ class PageUtility
         $userPageMap = [];
         $userPageArray = [];
 
-        for ($i = 0; $i < count($pages); $i++) {
+        foreach ($pages as $single_page) {
             $isFound = false;
-            for ($j = 0; $j < count($activities); $j++) {
-                if ($pages[$i]->id == $activities[$j]->page_id) {
-                    for ($k = 0; $k < count($users); $k++) {
-                        if ($users[$k]->id == $activities[$j]->user_id) {
-                            if(array_key_exists($users[$k]->id, $userPageMap)){
-                                $userPageMap[$users[$k]->id]['view_count'] = $userPageMap[$users[$k]->id]['view_count'] + 1;
+            foreach ($activities as $single_activity) {
+                if ($single_page->id == $single_activity->page_id) {
+                    foreach ($users as $single_user) {
+                        if ($single_user->id == $single_activity->user_id) {
+                            if(array_key_exists($single_user->id, $userPageMap)){
+                                $userPageMap[$single_user->id]['view_count'] = $userPageMap[$single_user->id]['view_count'] + 1;
                             }else{
                                 $isFound = true;
                                 $userPage = [];
-                                $userPage['page_id'] = $pages[$i]->id;
-                                $userPage['page_title'] = $pages[$i]->title;
-                                $userPage['user_id'] = $users[$k]->id;
-                                $userPage['user_name'] = $users[$k]->name;
+                                $userPage['page_id'] = $single_page->id;
+                                $userPage['page_title'] = $single_page->title;
+                                $userPage['user_id'] = $single_user->id;
+                                $userPage['user_name'] = $single_user->name;
                                 $userPage['view_count'] = 1;
-                                $userPageMap[$users[$k]->id] = $userPage;
+                                $userPageMap[$single_user->id] = $userPage;
                             }
                         }
-
+                        break;
                     }
                 }
+                break;
             }
             if (!$isFound) {
                 $userPage = [];
-                $userPage['page_id'] = $pages[$i]->id;
-                $userPage['page_title'] = $pages[$i]->title;
+                $userPage['page_id'] = $single_page->id;
+                $userPage['page_title'] = $single_page->title;
                 $userPageArray[] = $userPage;
             }
         }
