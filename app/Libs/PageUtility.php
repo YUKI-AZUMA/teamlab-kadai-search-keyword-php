@@ -2,8 +2,7 @@
 
 namespace App\Libs;
 
-use App\Http\Models\Activity;
-use App\Http\Models\Page;
+use DB;
 use App\Http\Models\User;
 
 class PageUtility
@@ -15,51 +14,47 @@ class PageUtility
      * @return array
      */
     public static function findUserViewedPage($keyword){
-        $pages = Page::where('title', 'LIKE', "$keyword%")->get();
-        $activities = Activity::all();
-        $users = User::all();
 
-        $userPageMap = [];
-        $userPageArray = [];
-
-        foreach ($pages as $single_page) {
-            $isFound = false;
-            foreach ($activities as $single_activity) {
-                if ($single_page->id == $single_activity->page_id) {
-                    foreach ($users as $single_user) {
-                        if ($single_user->id == $single_activity->user_id) {
-                            if(array_key_exists($single_user->id, $userPageMap)){
-                                $userPageMap[$single_user->id]['view_count'] = $userPageMap[$single_user->id]['view_count'] + 1;
-                            }else{
-                                $isFound = true;
-                                $userPage = [];
-                                $userPage['page_id'] = $single_page->id;
-                                $userPage['page_title'] = $single_page->title;
-                                $userPage['user_id'] = $single_user->id;
-                                $userPage['user_name'] = $single_user->name;
-                                $userPage['view_count'] = 1;
-                                $userPageMap[$single_user->id] = $userPage;
-                            }
-                        }
-                        break;
-                    }
-                }
-                break;
-            }
-            if (!$isFound) {
-                $userPage = [];
-                $userPage['page_id'] = $single_page->id;
-                $userPage['page_title'] = $single_page->title;
-                $userPageArray[] = $userPage;
-            }
+        //検索キーワードが「なし(空)」の場合、空の配列を返す。
+        if(empty($keyword)) {
+            return [];
         }
 
-        // ユーザIDでソート
-        ksort($userPageMap);
+        //検索キーワードを引数にし、結果を取得する。
+        $userPageObject = self::getUserPageObject($keyword);
 
-        foreach ($userPageMap as $userPage) {
-            $userPageArray[] = $userPage;
-        }
+        //オブジェクト型から配列に変換
+        $userPageArray = self::convertDataObjectToDataArray($userPageObject);
+
+        return $userPageArray;
+    }
+
+
+//////////////////////////////
+    /**
+     * @param $keyword
+     * @return mixed
+     */
+    private static function getUserPageObject($keyword){
+       $result = User::select(DB::raw("activity.user_id AS user_id,user.name as user_name,activity.page_id as page_id,page.title as page_title,COUNT(activity.user_id) as view_count"))
+                ->leftJoin('activity','user.id', '=', 'activity.user_id')
+                ->leftJoin('page', 'page.id', '=', 'activity.page_id')
+                ->where('page.title','LIKE', "$keyword%")
+                ->groupby ('activity.user_id', 'user.name', 'activity.page_id', 'page.title')
+                ->orderby('activity.user_id','ASC','activity.page_id','ASC')
+                ->get();
+
+      return $result;
+    }
+
+//////////////////////////////
+    /**
+     * @param $userPageObject
+     * @return array
+     */
+    private static function convertDataObjectToDataArray($userPageObject){
+        $userPageString = json_encode($userPageObject);
+        $userPageArray = json_decode($userPageString, TRUE);
 
         return $userPageArray;
     }
