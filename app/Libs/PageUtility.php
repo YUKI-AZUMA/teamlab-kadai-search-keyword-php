@@ -3,7 +3,7 @@
 namespace App\Libs;
 
 use DB;
-use App\Http\Models\User;
+use App\Http\Models\Page;
 
 class PageUtility
 {
@@ -23,6 +23,7 @@ class PageUtility
         //検索キーワードを引数にし、結果を取得する。
         $userPageObject = self::getUserPageObject($keyword);
 
+        // Converting User Page Object to User Page Array for the UI
         //オブジェクト型から配列に変換
         $userPageArray = self::convertDataObjectToDataArray($userPageObject);
 
@@ -36,12 +37,12 @@ class PageUtility
      * @return mixed
      */
     private static function getUserPageObject($keyword){
-       $result = User::select(DB::raw("activity.user_id AS user_id,user.name as user_name,activity.page_id as page_id,page.title as page_title,COUNT(activity.user_id) as view_count"))
-                ->leftJoin('activity','user.id', '=', 'activity.user_id')
-                ->leftJoin('page', 'page.id', '=', 'activity.page_id')
+       $result = Page::select(DB::raw("page.id AS page_id,user.name as user_name,activity.user_id as user_id,page.title as page_title,COUNT(activity.user_id) as view_count"))
+                ->leftJoin('activity','page.id', '=', 'activity.page_id')
+                ->leftJoin('user', 'user.id', '=', 'activity.user_id')
                 ->where('page.title','LIKE', "$keyword%")
-                ->groupby ('activity.user_id', 'user.name', 'activity.page_id', 'page.title')
-                ->orderby('activity.user_id','ASC','activity.page_id','ASC')
+                ->groupby ('activity.user_id', 'user.name', 'page.id', 'page.title')
+                ->orderby('activity.user_id','ASC','page.id','ASC')
                 ->get();
 
       return $result;
