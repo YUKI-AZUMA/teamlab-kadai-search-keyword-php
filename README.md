@@ -1,135 +1,138 @@
-# チームラボ選考課題
+## チームラボ選考課題 -チューニング内容説明-
 
-このリポジトリで動作するサンプルアプリケーションのキーワード検索機能を、  
-可能な限りチューニングして結果が速く表示されるようにしてください  
-※ サンプルは何もしないとまともに動作しません
+### ◇ 前提
 
-## 検索仕様
+  * <b>元のサンプルアプリケーションは、検索仕様を全て満たしている</b>  
 
-<b>page</b> テーブルの <b>title</b> カラムを前方一致でキーワード検索し、
+    * page テーブルの title カラムを前方一致でキーワード検索し、ユーザID(第1ソート昇順)、ぺージID(第2ソート昇順)で10件取得可能
+    * 結果の件数と表示順は正しい  
+    * 検索スピードだけが遅い  
 
-* ユーザID
-* ユーザ名
-* ページID
-* ページタイトル
-* 閲覧数
+### ◇ テストケース(現状の検索状況の把握)
+  * <b>元のサンプルの検索結果を記録</b>  
 
-を 第1ソート：**ユーザID(昇順)**、第2ソート：**ページID(昇順)** で10件取得してください
-
-## 制限
-
-* 表示される項目や結果の順番が変わらないこと
-* memcached等、キャッシュサーバを用いないこと
-* controllerパッケージは修正しないこと
-* キーワード「あり/なし」どちらの場合も考慮すること
-
-## 評価方法
-
-* チューニングした結果の検索速度を評価対象とします
-    * 公平を期すため弊社で用意した計測用サーバで速度の検証をします
-    * 計測用サーバのメモリは<b>2G</b>のものを用意しています
-
-## 提出方法
-
-* このリポジトリをクローンし、ご自身のgithub.com にプッシュしてリポジトリのURLを提出してください
-    * 【例】https://github.com/team-lab/teamlab-kadai-search-keyword-php
-    * 差分が分かるようにこのサンプルのコミットと自分がチューニングしたコミットは分けてください
-    * README.md ファイルを作成し、チューニングした内容を説明してください
-
-## サンプルアプリケーションの説明
-
-### フォルダ構成(一部抜粋)
+    検索ワードは以下４つ  
 ```
-.
-├── .env                        ・・・設定ファイル
-├── Dockerfile
-├── app
-│   ├── Http
-│   │   ├── Controllers         ・・・コントローラー
-│   │   │   ├── Controller.php
-│   │   │   └── IndexController.php
-│   │   └── Models              ・・・モデル
-│   │       ├── Activity.php
-│   │       ├── Page.php
-│   │       └── User.php
-│   └── Libs                    ・・・ユーティリティ
-│       └── PageUtility.php
-├── composer.json
-├── config
-│   └── app.php
-├── database
-│   └── sql
-│       ├── alter.sql           ・・・修正用SQL
-│       ├── config
-│       │   └── my.cnf          ・・・MySQL設定
-│       └── init
-│           └── mydb.sql        ・・・DB初期化ファイル
-├── docker-compose.yml
-├── package.json
-├── public
-│   └── index.php
-├── resources
-│   └── views                   ・・・ビュー
-│       ├── index.blade.php
-│       └── page.blade.php
-├── routes
-│   └── web.php
-└── startup.sh                  ・・・初期化スクリプト
+      　「aa」・・・・・・・検索にかかる時間が長く、パフォーマンス改善結果に期待できるため選定  
+      　「C言語」・・・・・第1、第2ソートが効いているかチェックするため選定  
+      　「Sandbox」・・・・閲覧数が複数ある検索ワードのため選定(閲覧数がカウントされることを確認する)  
+      　「アップロード」・・ 閲覧数が複数ある検索ワードのため選定(閲覧数がカウントされることを確認する)  
 ```
 
-### 開発環境
 
-* 言語: PHP 7.1
-* フレームワーク: Laravel 5.5
-* データベース: MySQL
-* コンテナ: Docker
+No| 検索ワード |チェック項目 | 1回目 |2回目 | 3回目
+:---:|:---:|:---:|:---:|:---:|:---:
+1| aa | ミリ秒 |181746|170410|155867
+2| aa | 件数 |242|242|242
+3| aa | 第1ソート（ユーザID） |表示なし|表示なし|表示なし
+4| aa | 第2ソート（ぺージID） |◯|◯|◯
+5| C言語| ミリ秒 |10711|9460|10236
+6| C言語| 件数 |102|102|102
+7| C言語| 第1ソート（ユーザID） |◯|◯|◯
+8| C言語| 第2ソート（ぺージID） |◯|◯|◯
+9| Sandbox| ミリ秒 |24982|24809|24734
+10| Sandbox| 件数 |213|213|213
+11| Sandbox| 第1ソート（ユーザID） |◯|◯|◯
+12| Sandbox| 第2ソート（ぺージID） |◯|◯|◯
+13| アップロード| ミリ秒 |27069|27854|27495
+14| アップロード| 件数 |129|129|129
+15| アップロード| 第1ソート（ユーザID） |◯|◯|◯
+16| アップロード| 第2ソート（ぺージID） |◯|◯|◯
 
-### データベース構成
 
-![er](https://user-images.githubusercontent.com/342957/31817043-7d1a2040-b5cd-11e7-928d-205952d75b35.png)
+ * <b>チューニング前の検索状況</b>  
 
-* page 150万件
-   * ページ情報を格納するテーブルです。
-* user 1万件
-   * ユーザ情報を格納するテーブルです。
-* activity 10万件
-   * ユーザの閲覧履歴を格納するテーブルです。
+    * 最速で9460ミリ秒、最遅で181746ミリ秒かかる
+    * 表示順は、検索仕様通り
+    * 検索件数は、3回のテストで同じ結果となる
+    * 検索ワードによって、ぺージタイトルカラム、ぺージIDカラム以外がNULLの場合がある
+    * ユーザIDカラムがNULLの場合、NULLは最大値として扱われている
+    * 閲覧数カウント「Sandbox」「アップロード」に関して、閲覧数が2回になるケースがある  
 
-### ローカル環境構築
 
-#### 1. 課題ソースコードクローン
-* Macbook: Dockerはデフォルト“/Users”, “/Volumes”, “/tmp”, “/private”のディレクトリを参考できるので、その下においてください。
+### ◇ 修正方針
+
+  * クエリビルダを用いて結果を取得しスピードを上げる(for文とif文を用いての全件比較をしない)
+  * 検索ワードが空で検索された場合は、空の結果を返すようにする
+  * ユーザーIDがNULLの場合の扱いを考慮する(昇順でソートした時に、最大値として扱われるようにする)
+
+
+### ◇ 修正内容  
+
+  修正ファイル : /app/Http/Libs/PageUtility.php
+
+<b>検索キーワードが「なし(空)」の場合、空の配列を返す</b>   
+```php
+          if(empty($keyword)) {
+              return [];
+          }
 ```
-git clone https://github.com/team-lab/teamlab-kadai-search-keyword-php.git
+<b>検索キーワードを引数にし、クエリビルダを用いて検索結果を取得する</b>  
+
+  * 閲覧数のカウントを、COUNT(activity.user_id)にて取得する
+  * ぺージテーブルを軸に、アクティビティテーブル、ユーザーテーブルをLEFTJOINする
+  * orderbyを2つに分け、ぺージIDのソートがorderbyrawの影響を受けないようにする  
+
+  ```php
+   private static function getUserPageObject($keyword){
+      $result = Page::select(DB::raw("page.id AS page_id,user.name as user_name,activity.user_id as user_id,page.title as page_title,COUNT(activity.user_id) as view_count"))
+               ->leftJoin('activity','page.id', '=', 'activity.page_id')
+               ->leftJoin('user', 'user.id', '=', 'activity.user_id')
+               ->where('page.title','LIKE', "$keyword%")
+               ->groupby ('activity.user_id', 'user.name', 'page.id', 'page.title')
+               ->orderbyraw('activity.user_id IS NULL ASC')
+               ->orderby('activity.user_id','ASC')
+               ->orderby('page.id','ASC')
+               ->get();
+
+     return $result;
+   }
 ```
 
-#### 2. Docker インストール手順
+ <b>結果をオブジェクト型から、配列に変換する</b>  
 
-* Macbook: Docker for Macのインストール
-    * 以下のURLより Docker for Mac をダウンロードしてインストールします
-    * https://download.docker.com/mac/stable/Docker.dmg
-* Window: Docker for Windowのインストール
-    * 以下のURLより Docker for Mac をダウンロードしてインストールします
-    * https://download.docker.com/win/stable/Docker%20for%20Windows%20Installer.exe
-* Docker インストールした後、動作確認方法<br>
- 
-```
-docker --version
-docker-compose --version
-docker-machine --version
+```php
+private static function convertDataObjectToDataArray($userPageObject){
+    $userPageString = json_encode($userPageObject);
+    $userPageArray = json_decode($userPageString, TRUE);
+
+    return $userPageArray;
+}
 ```
 
-エラーが出なければ、Dockerのインストールは成功です！
+### ◇ チューニング結果
 
-#### 3. アプリケーションの起動
+No| 検索ワード |チェック項目 | 1回目 |2回目 | 3回目
+:---:|:---:|:---:|:---:|:---:|:---:
+1| aa | ミリ秒 |1674|1748|1862
+2| aa | 件数 |242|242|242
+3| aa | 第1ソート（ユーザID） |表示なし|表示なし|表示なし
+4| aa | 第2ソート（ぺージID） |◯|◯|◯
+5| C言語| ミリ秒 |503|493|545
+6| C言語| 件数 |102|102|102
+7| C言語| 第1ソート（ユーザID） |◯|◯|◯
+8| C言語| 第2ソート（ぺージID） |◯|◯|◯
+9| Sandbox| ミリ秒 |559|600|584
+10| Sandbox| 件数 |213|213|213
+11| Sandbox| 第1ソート（ユーザID） |◯|◯|◯
+12| Sandbox| 第2ソート（ぺージID） |◯|◯|◯
+13| アップロード| ミリ秒 |649|683|698
+14| アップロード| 件数 |129|129|129
+15| アップロード| 第1ソート（ユーザID） |◯|◯|◯
+16| アップロード| 第2ソート（ぺージID） |◯|◯|◯
 
-課題ソースコードのディレクトリで下記コマンドを実行してください
-```
-docker-compose up
-```
-※起動毎に「mydb.sql」「alter.sql」が実行されます。
 
-```
-app_1  | Laravel development server started: <http://0.0.0.0:8080>
-```
-が表示されたら、ブラウザで http://localhost:8080 確認。
+### ◇ 結果の比較
+* <b>チューニング前と後での検索スピードを比較する</b>  
+
+  * 件数、第1ソート、第2ソートは、チューニング前後で同じになっていることを確認  
+  * 下表の結果は、各3回の結果の平均値を記載している
+
+No| 検索ワード |チューニング前　(ミリ秒) |チューニング後　(ミリ秒)|時間削減率　(%)
+:---:|:---:|:---:|:---:|:---:|
+1| aa |169341|1761|98.96
+2| C言語 |10135|513|94.93
+3| Sandbox |24841|581|97.66
+4| アップロード|27472|676|97.53
+
+検索にかかった時間を比較した結果、平均97.27%の検索時間の削減に成功した。
