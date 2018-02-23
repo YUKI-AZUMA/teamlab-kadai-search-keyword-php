@@ -42,7 +42,10 @@ class PageUtility
                 ->leftJoin('user', 'user.id', '=', 'activity.user_id')
                 ->where('page.title','LIKE', "$keyword%")
                 ->groupby ('activity.user_id', 'user.name', 'page.id', 'page.title')
-                ->orderby('activity.user_id','ASC','page.id','ASC')
+                ->orderbyraw('activity.user_id IS NULL ASC')
+                ->orderby('activity.user_id','ASC')
+                //ソートを分けることで、ぺージIDのソートはoderbyrawの影響を受けない
+                ->orderby('page.id','ASC')
                 ->get();
 
       return $result;
