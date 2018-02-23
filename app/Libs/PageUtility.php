@@ -23,7 +23,6 @@ class PageUtility
         //検索キーワードを引数にし、結果を取得する。
         $userPageObject = self::getUserPageObject($keyword);
 
-        // Converting User Page Object to User Page Array for the UI
         //オブジェクト型から配列に変換
         $userPageArray = self::convertDataObjectToDataArray($userPageObject);
 
